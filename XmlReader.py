@@ -58,17 +58,4 @@ def read_activities(rawstr: str):
     return result
 
 
-def get_semester_name(string: str) -> str:
-    try:
-        return re.search(r"<semester><id>[0-9]*</id><namezh>([\s\S]*?)</namezh>", string).group(1)
-    except AttributeError:
-        return "未命名"
-
-
-def get_semester_start_date(string: str) -> str:
-    try:
-        return re.search(r"</schoolyear><startdate>([\s\S]*?)</startdate>", string).group(1)
-    except AttributeError:
-        return "2021-9-6"
-
 

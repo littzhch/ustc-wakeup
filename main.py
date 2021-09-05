@@ -2,15 +2,15 @@ from XmlReader import *
 from WakeupWriter import *
 
 
-filename = input("文件名：")
+filename = input("文件路径：")
 with open(filename, encoding='utf-8') as f:
     string = f.read()
-semester_name = get_semester_name(string)
-semester_start_date = get_semester_start_date(string)
+table_name = "新课表"
+semester_start_date = "2021-9-6"
 
 
 activity_list = read_activities(string)
-table = CourseTable(name=semester_name, start_date=get_semester_start_date(string))
+table = CourseTable(name=table_name, start_date=semester_start_date)
 for activity_dict in activity_list:
     activity = Activity(day=activity_dict["day"],
                         start_period=activity_dict["start_period"],
@@ -28,7 +28,7 @@ for activity_dict in activity_list:
         course.add_activity(activity)
         table.add_course(course)
 
-table.write_file(semester_name + ".wakeup_schedule")
+table.write_file(table_name + ".wakeup_schedule")
 
 
 
