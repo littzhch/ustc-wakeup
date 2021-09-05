@@ -1,4 +1,5 @@
 #ustc-wakeup
+
 将USTC教务系统中的课程表导出为 WakeUp课程表 app
 的备份文件（*.wakeup_schedule），该备份文件可以方便地导入app中。
 
