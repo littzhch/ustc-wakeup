@@ -2,7 +2,7 @@ import json
 from codecs import open
 
 
-useless_information = "{\"courseLen\": 45,\"id\": 1,\"name\": \"默认\",\"sameBreakLen\": false,\
+useless_information = "{\"courseLen\": 45,\"id\": 1,\"name\": \"ustc_timetable\",\"sameBreakLen\": false,\
 \"sameLen\": true,\"theBreakLen\": 10}\n\
 [{\"endTime\": \"08:35\",\"node\": 1,\"startTime\": \"07:50\",\"timeTable\": 1},\
 {\"endTime\": \"09:25\",\"node\": 2,\"startTime\": \"08:40\",\"timeTable\": 1},\
