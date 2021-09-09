@@ -67,11 +67,12 @@ class Activity:
 
 
 class Course:
-    def __init__(self, name="未命名", credit=1.0, color="#ffd717ff"):
+    def __init__(self, name="未命名", credit=1.0, note="", color="#ffd717ff"):
         self.name = name
         self.credit = credit
         self.color = color
         self.id = 0
+        self.note = note
         self.activity_list = []
 
     def add_activity(self, activity: Activity):
@@ -83,7 +84,7 @@ class Course:
             "courseName": self.name,
             "credit": self.credit,
             "id": self.id,
-            "note": "",
+            "note": self.note,
             "tableId": 1
         }
 

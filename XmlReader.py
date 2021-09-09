@@ -2,16 +2,17 @@ import re
 
 
 activity_match_regex = \
-    r"[\s\S]*?<activities>[\s\S]*?"\
-    r"<coursename>([\s\S]*?)</coursename>[\s\S]*?"\
-    r"<weeksstr>([0-9]*)(\S*?)(?:(,)|(?:</weeksstr>))"\
-    r"[\s\S]*?(?:(?:<room>([\s\S]*?)</room>)|(?:<room />))[\s\S]*?"\
-    r"<weekday>([1-9])</weekday>[\s\S]*?"\
-    r"<startunit>([0-9]*)</startunit>"\
-    r"[\s\S]*?<endunit>([0-9]*)</endunit>[\s\S]*?"\
-    r"<teachers>[\s]*<teachers>([\s\S]*?)</teachers>"\
-    r"[\s\S]*?<credits>([\s\S]*?)</credits>"\
-    r"[\s\S]*?(?:(?:<customplace>([\s\S]*?)</customplace>)|(?:<customplace />))"\
+    r"[\s\S]*?<activities>"\
+    r"[\s\S]*?<coursename>(?P<name>[\s\S]*?)</coursename>"\
+    r"[\s\S]*?<weeksstr>(?P<startweek>[0-9]*)(?P<weekfollow>\S*?)(?:(?P<weekendsign>(,))|(?:</weeksstr>))"\
+    r"[\s\S]*?(?:(?:<room>(?P<room>[\s\S]*?)</room>)|(?:<room />))"\
+    r"[\s\S]*?<weekday>(?P<day>[1-9])</weekday>"\
+    r"[\s\S]*?<startunit>(?P<startperiod>[0-9]*)</startunit>"\
+    r"[\s\S]*?<endunit>(?P<endperiod>[0-9]*)</endunit>"\
+    r"[\s\S]*?(?:(?:<lessonremark>(?P<note>[\s\S]*?)</lessonremark>)|(?:<lessonremark />))"\
+    r"[\s\S]*?<teachers>\s*<teachers>(?P<teacher>[\s\S]*?)</teachers>"\
+    r"[\s\S]*?<credits>(?P<credit>[\s\S]*?)</credits>"\
+    r"[\s\S]*?(?:(?:<customplace>(?P<customplace>[\s\S]*?)</customplace>)|(?:<customplace />))"\
     r"[\s\S]*?</activities>"
 rawstring = ""
 
@@ -23,32 +24,33 @@ def _read_single_activity():
     if not match_obj:
         return None
 
-    result["course_name"] = match_obj.group(1)
+    result["course_name"] = match_obj["name"]
     result["location"] = \
-        match_obj.group(11) if match_obj.group(11) \
-        else (match_obj.group(5) if match_obj.group(5) else "")
-    result["day"] = int(match_obj.group(6))
-    result["start_period"] = int(match_obj.group(7))
-    result["length"] = int(match_obj.group(8)) - result["start_period"] + 1
-    result["teacher"] = match_obj.group(9)
-    result["credit"] = float(match_obj.group(10))
+        match_obj["customplace"] if match_obj["customplace"] \
+        else (match_obj["room"] if match_obj["room"] else "")
+    result["day"] = int(match_obj["day"])
+    result["start_period"] = int(match_obj["startperiod"])
+    result["length"] = int(match_obj["endperiod"]) - result["start_period"] + 1
+    result["teacher"] = match_obj["teacher"]
+    result["credit"] = float(match_obj["credit"])
+    result["note"] = match_obj["note"] if match_obj["note"] else ""
 
-    result["start_week"] = int(match_obj.group(2))
-    if match_obj.group(3):
-        if match_obj.group(3)[-1] == '双':
+    result["start_week"] = int(match_obj["startweek"])
+    if match_obj["weekfollow"]:
+        if match_obj["weekfollow"][-1] == '双':
             result["week_type"] = 2
-            result["end_week"] = int(match_obj.group(3)[1:-1])
-        elif match_obj.group(3)[-1] == '单':
+            result["end_week"] = int(match_obj["weekfollow"][1:-1])
+        elif match_obj["weekfollow"][-1] == '单':
             result["week_type"] = 1
-            result["end_week"] = int(match_obj.group(3)[1:-1])
+            result["end_week"] = int(match_obj["weekfollow"][1:-1])
         else:
             result["week_type"] = 0
-            result["end_week"] = int(match_obj.group(3)[1:])
+            result["end_week"] = int(match_obj["weekfollow"][1:])
     else:
         result["week_type"] = 0
         result["end_week"] = result["start_week"]
 
-    if match_obj.group(4):
+    if match_obj["weekendsign"]:
         rawstring = re.sub(r"<weeksstr>[\S]*?,", "<weeksstr>", rawstring, count=1)
     else:
         rawstring = rawstring[match_obj.span()[1]:]
@@ -61,8 +63,6 @@ def read_activities(rawstr: str):
     global rawstring
     rawstring = rawstr
     result = []
-    start = re.search(r"</credits>\s*<activities>", rawstr).span()[1]
-    rawstring = rawstring[start:]
     while True:
         info_dict = _read_single_activity()
         if not info_dict:
