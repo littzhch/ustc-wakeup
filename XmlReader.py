@@ -55,7 +55,6 @@ def _read_single_activity():
     else:
         rawstring = rawstring[match_obj.span()[1]:]
 
-    print(result)
     return result
 
 
