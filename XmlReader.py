@@ -69,6 +69,3 @@ def read_activities(rawstr: str):
             break
         result.append(info_dict)
     return result
-
-
-
