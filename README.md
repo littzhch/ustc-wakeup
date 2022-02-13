@@ -4,9 +4,11 @@
 
 ## 运行环境
 - python 3
-- 需要PIL（用来处理统一身份认证的验证码）
-### 安装PIL
+- 需要 requests 包
+- 需要 PIL（用来处理统一身份认证的验证码）
+
 ```bash
+pip install requests
 pip install -v pillow=="9.0.1"
 ```
 
