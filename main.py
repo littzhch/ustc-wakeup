@@ -1,39 +1,39 @@
-from XmlReader import *
-from WakeupWriter import *
+from os import system
+from jw import JwConnection
 
 
-table_name = "新课表"
-semester_start_date = "2021-9-6"
-filename = input("文件路径：")
-maxweek = 1
-with open(filename, encoding='utf-8') as f:
-    string = f.read()
-activity_list = read_activities(string)
+def get_cas_info() -> (str, str):
+    print("统一身份认证")
+    usr = input("用户名（学号）：")
+    pwd = input("密码：")
+    if system("cls") != 0:
+        system("clear")
+    return usr, pwd
 
 
-table = CourseTable(name=table_name, start_date=semester_start_date)
+def get_semester_selection(info: dict):
+    for key in reversed(info.keys()):
+        print("{:>4s} {}".format(key, info[key]))
+    return input("输入编号以选择学期（不输入默认为当前学期）：")
 
-for activity_dict in activity_list:
-    if activity_dict["end_week"] > maxweek:
-        maxweek = activity_dict["end_week"]
-    activity = Activity(day=activity_dict["day"],
-                        start_period=activity_dict["start_period"],
-                        length=activity_dict["length"],
-                        start_week=activity_dict["start_week"],
-                        end_week=activity_dict["end_week"],
-                        location=activity_dict["location"],
-                        teacher=activity_dict["teacher"],
-                        week_type=activity_dict["week_type"])
-    course = table.get_course(activity_dict["course_name"])
-    if course:
-        course.add_activity(activity)
-    else:
-        course = Course(activity_dict["course_name"], activity_dict["credit"], note=activity_dict["note"])
-        course.add_activity(activity)
+
+if __name__ == "__main__":
+    user, pswd = get_cas_info()
+    try:
+        jc = JwConnection(user, pswd)
+    except ValueError as err:
+        print(err)
+        input("按回车退出")
+        exit(0)
+    selection = get_semester_selection(jc.semester_list)
+    if selection != "":
+        jc.selected_semester_id = selection
+    data = jc.load_semester_json().get_data()
+    table = data.generate_course_table()
+    for course in data.generate_courses():
         table.add_course(course)
-
-table.maxweek = maxweek
-table.write_file(table_name + ".wakeup_schedule")
+    table.write_file(data.semester_name + ".wakeup_schedule")
+    input("文件已保存，按回车退出")
 
 
 
