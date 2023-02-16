@@ -5,3 +5,4 @@
 
 *.wakeup_schedule
 *.xht
+/__pycache__

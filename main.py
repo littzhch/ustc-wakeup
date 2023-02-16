@@ -1,13 +1,11 @@
 from os import system
 from jw import JwConnection
+import getpass
 
-
-def get_cas_info() -> (str, str):
+def get_cas_info():
     print("统一身份认证")
     usr = input("用户名（学号）：")
-    pwd = input("密码：")
-    if system("cls") != 0:
-        system("clear")
+    pwd = getpass.getpass("密码：")
     return usr, pwd
 
 
