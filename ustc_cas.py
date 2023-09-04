@@ -258,6 +258,12 @@ def _get_form_list(text: str) -> dict:
     return result
 
 
+def _get_cas_lt(text: str) -> str:
+    re_str = r"\$\(\"#CAS_LT\"\).val\(\"(\S*?)\"\);"
+    match = re.search(re_str, text)
+    return match.group(1)
+
+
 def cas_login(username: str, password: str, service="", autojump=False):
     """
     登录统一身份认证系统
@@ -276,9 +282,11 @@ def cas_login(username: str, password: str, service="", autojump=False):
     rsps = rq.get(url, params={"service": service})
     jar.update(rsps.cookies)
     form = _get_form_list(rsps.text)
+    cas_lt = _get_cas_lt(rsps.text)
 
     form["username"] = username
     form["password"] = password
+    form["CAS_LT"] = cas_lt
     if form["showCode"]:
         rsps = rq.get(image_url, cookies=jar)
         form["LT"] = _get_validatecode(rsps.content)
