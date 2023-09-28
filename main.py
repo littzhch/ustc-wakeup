@@ -2,6 +2,7 @@ from os import system
 from jw import JwConnection
 import getpass
 
+
 def get_cas_info():
     print("统一身份认证")
     usr = input("用户名（学号）：")
@@ -16,6 +17,12 @@ def get_semester_selection(info: dict):
 
 
 if __name__ == "__main__":
+    import socket
+    import requests.packages.urllib3.util.connection as urllib3_cn
+    urllib3_cn.allowed_gai_family = lambda: socket.AF_INET # force ipv4
+    # urllib3_cn.allowed_gai_family = lambda: socket.AF_INET6 # force ipv6
+    
+
     user, pswd = get_cas_info()
     try:
         jc = JwConnection(user, pswd)
