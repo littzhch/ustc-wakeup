@@ -17,7 +17,7 @@ def _date_adjust(date: str) -> str:
         day = -struct_time.tm_wday
     else:
         day = 7 - struct_time.tm_wday
-    return time.strftime("%Y-%m-%d", time.localtime(time.mktime(struct_time) + 86400 * day)) \
+    return time.strftime("%Y-%m-%d", time.localtime(time.mktime(struct_time) + 86400 * day -86400)) \
         .replace("-0", "-")
 
 
@@ -87,7 +87,7 @@ class Data:
         self.semester_id = semester_id
         self.semester_name = None
         self.semester_json = json.loads(semester_json)
-        self.semester_start_date = None  # 第一周周一
+        self.semester_start_date = None  # 第一周周一的前一天（一周以周日开始）
         self.timetable_json = None
 
         re_str = r"\\\"nameZh\\\":\\\"([\S\s]{0,50}?)\\\"[\S\s]{0,50}?\\\"id\\\":" + \
