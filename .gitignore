@@ -1,8 +1,8 @@
-# Default ignored files
-/shelf/
-/workspace.xml
-/.idea
+__pycache__/
+/.pdm-build/
+/.venv/
+/dist/
+/.pdm-python
 
-*.wakeup_schedule
-*.xht
-/__pycache__
+
+
