@@ -1,0 +1,32 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+name = "ustcwakeup"
+version = "2024.0.0"
+dependencies = [
+    "pillow>=10.2.0",
+    "requests>=2.31.0",
+]
+requires-python = ">=3.8"
+authors = [
+    {name = "littzhch", email = "2371050115@qq.com"},
+]
+maintainers = [
+    {name = "littzhch", email = "2371050115@qq.com"},
+]
+description = "一个将USTC教务系统中的课程表导出为WakeUp备份文件的工具"
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["ustc", "wakeup"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python"
+]
+
+[project.urls]
+Repository = "https://github.com/littzhch/ustc-wakeup.git"
+
+[project.scripts]
+ustcwakeup = "ustcwakeup:cli_main"

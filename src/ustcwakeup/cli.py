@@ -5,7 +5,7 @@ import re
 import socket
 import requests.packages.urllib3.util.connection as urllib3_cn
 
-from jw import JwConnection
+from .jw import JwConnection
 
 
 def main():

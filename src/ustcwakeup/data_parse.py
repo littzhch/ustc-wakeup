@@ -1,8 +1,8 @@
 import re
 import codecs
 import time
-from wakeup import *
-from color import *
+from .wakeup import *
+from .color import *
 
 
 def _generate_time_node(info: dict) -> TimeNode:

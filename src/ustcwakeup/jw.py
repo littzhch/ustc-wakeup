@@ -1,7 +1,7 @@
 import requests as rq
 import re
-from ustc_cas import *
-from data_parse import Data
+from .ustc_cas import *
+from .data_parse import Data
 
 header = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
