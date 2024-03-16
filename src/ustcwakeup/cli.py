@@ -21,12 +21,12 @@ def cli_main() -> int:
         output = get_course_table(
             username=args["username"],
             password=args["password"],
-            semester=args["semester"],
+            semester_name=args["semester"],
             Handler=available_handlers[args["format"]],
             force_ipv4=args["4"],
             force_ipv6=args["6"],
         )
-    except Exception as err:
+    except ValueError as err:
         print(err)
         return 2
     

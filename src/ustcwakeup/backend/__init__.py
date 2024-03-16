@@ -23,12 +23,7 @@ class CourseTableOutput(ABC):
         pass
 
 
-class CourseTableHandler(ABC):
-    @staticmethod
-    @abstractmethod
-    def backend_name() -> str:
-        pass
-    
+class CourseTableHandler(ABC):    
     @abstractmethod
     def __init__(self, semester_name: str):
         pass
