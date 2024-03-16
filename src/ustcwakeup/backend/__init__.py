@@ -13,6 +13,9 @@ class CourseTableOutput(ABC):
     
     @abstractmethod
     def get_file_extension(self) -> str:
+        """
+        不包含 '.'
+        """
         pass
     
     @abstractmethod
@@ -49,11 +52,12 @@ class CourseTableHandler(ABC):
     def finish(self) -> CourseTableOutput:
         pass
 
-available_handlers: list[type[CourseTableHandler]] = []
+available_handlers: dict[str, type[CourseTableHandler]] = {}
 
-def register_handler(handler: type[CourseTableHandler]):
-    available_handlers.append(handler)
-    
+def register_handler(handler: type[CourseTableHandler], name: str):
+    available_handlers[name] = handler
+
+from .wakeup import WakeupHandler
 
 __all__ = ["CourseTableHandler", "CourseTableOutput", "register_handler", "available_handlers"]
 
