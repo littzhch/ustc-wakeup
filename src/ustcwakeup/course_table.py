@@ -1,71 +1,75 @@
-from functools import total_ordering
-
-
-@total_ordering
-class Time:
-    """
-    一天中的一个时间点，使用 24 小时制
-    """
-    def __init__(self, hour: int, minute: int):
-        assert hour >= 0 and hour <= 23 and minute >= 0 and minute <= 59
-        self.__hour = hour
-        self.__minute = minute
-        self.__minutes = hour * 60 + minute
+class WeekSelection:
+    def __init__(self, first_week: int|None = None, 
+                 last_week: int|None = None,
+                 week_type: int|None = None):
+        assert first_week is not None and last_week is not None and week_type is not None and week_type >= 0 and week_type <= 2
+        self.first_week = first_week
+        self.last_week = last_week
+        self.week_type = week_type
+        if week_type == 0:
+            self.weeks = list(range(first_week, last_week + 1))
+        elif week_type == 1:
+            first_week = first_week if first_week % 2 == 1 else first_week + 1
+            self.weeks = list(range(first_week, last_week + 1, 2))
+        else:
+            first_week = first_week if first_week % 2 == 0 else first_week + 1
+            self.weeks = list(range(first_week, last_week + 1, 2))
+            
+    def __eq__(self, other: "WeekSelection") -> bool:
+        return isinstance(other, WeekSelection) and self.weeks == other.weeks
         
-    def hour(self) -> int:
-        """
-        获取小时数(0~23)
-        """
-        return self.__hour
-    
-    def minute(self) -> int:
-        """
-        获取分钟数
-        """
-        return self.__minute
+            
 
-    def __int__(self):
-        return self.__minutes
-
-    def __eq__(self, other):
-        return int(self) == int(other)
-
-    def __gt__(self, other):
-        return int(self) > int(other)
-
-    def __sub__(self, other) -> int:
-        return int(self) - int(other)
-
-    def __add__(self, other: int) -> "Time":
-        minutes = int(self) + other
-        hour = minutes // 60
-        minute = minutes % 60
-        return Time(hour, minute)
-    
-
-@total_ordering
 class TimePeriod:
-    def __init__(self, start_time: Time, end_time: Time):
-        self.start_time = start_time
-        self.end_time = end_time
+    """
+    表示一周当中的一个时间段。
+    `self.week`: 1~6，表示周一到周六，0表示周日
+    `self.start`: int，表示开始节次
+    `self.end`: int|Time，表示结束节次
+    """
+    def __init__(self, weekday: int, start: int, end: int):
+        assert weekday >= 0 and weekday <= 6
+        self.weekday = weekday
+        self.start = start
+        self.end = end
+        
+    def __eq__(self, other: "TimePeriod") -> bool:
+        return isinstance(other, TimePeriod) \
+            and self.weekday == other.weekday \
+            and self.start == other.start \
+            and self.end == other.end
+    
+    
+class Activity:
+    def __init__(self, week_range: WeekSelection, time_period: TimePeriod, location: str, teachers: list[str]):
+        self.week_range = week_range
+        self.time_period = time_period
+        self.location = location
+        self.teachers = teachers
 
-    def __eq__(self, other):
-        return self.start_time == other.start_time \
-               and self.end_time == other.end_time
 
-    def __gt__(self, other):
-        return self.start_time > other.start_time
+class Course:
+    def __init__(self):
+        self.name_zh: str = None
+        self.name_en: str = None
+        self.credits: float = None
+        self.course_id: str = None
+        self.class_id: str = None
+        self.activities: list[Activity] = []
+        
+    def add_activity(self, activity: Activity):
+        for exist_activity in self.activities:
+            if exist_activity.week_range == activity.week_range \
+            and exist_activity.time_period == activity.time_period \
+            and exist_activity.location == activity.location:
+                exist_activity.teachers.extend(activity.teachers)
+                return
+        self.activities.append(activity)
+    
+    
+    
+    
 
-    def __len__(self):
-        return self.end_time - self.start_time
 
-    def __sub__(self, other):
-        return self.start_time - other.end_time
 
-    def get_info(self):
-        return {
-            "endTime": str(self.end_time),
-            "node": None,
-            "startTime": str(self.start_time),
-            "timeTable": None
-        }
+    
