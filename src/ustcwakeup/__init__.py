@@ -1,4 +1,3 @@
-from .cli import main
-cli_main = main
+from .cli import cli_main
 
-__all__ = ["cli_main"]
+__all__ = ["cli_main", "backend", "frontend", "course_table"]

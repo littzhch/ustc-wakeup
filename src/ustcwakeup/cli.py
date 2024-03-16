@@ -1,40 +1,43 @@
-from os import system
 import getpass
 import argparse
 import re
-import socket
-import requests.packages.urllib3.util.connection as urllib3_cn
 
-from .jw import JwConnection
+from .backend import available_handlers
+from .frontend import get_course_table
 
-
-def main():
+def cli_main() -> int:
     args = get_args()
+    if args["print_formats"]:
+        for key in available_handlers.keys():
+            print(key)
+        return 0
+    
     ask_for_info(args)
     
-    if args['6']:
-        urllib3_cn.allowed_gai_family = lambda: socket.AF_INET6
-    elif args['4']:
-        urllib3_cn.allowed_gai_family = lambda: socket.AF_INET
-    
+    if args["format"] not in available_handlers.keys():
+        print("未知的输出格式：" + args["format"])
+        return 1
     try:
-        jc = JwConnection(args["username"], args["password"])
-    except ValueError as err:
+        output = get_course_table(
+            username=args["username"],
+            password=args["password"],
+            semester=args["semester"],
+            Handler=available_handlers[args["format"]],
+            force_ipv4=args["4"],
+            force_ipv6=args["6"],
+        )
+    except Exception as err:
         print(err)
-        exit(1)
+        return 2
     
-    id = get_semester_id(args["semester"], jc.semester_list)
-    if id is None:
-        print(args["semester"] + "目前没有课表")
-        exit(2)
-    jc.selected_semester_id = id
-
-    data = jc.load_semester_json().get_data()
-    table = data.generate_course_table()
-    for course in data.generate_courses():
-        table.add_course(course)
-    table.write_file(args["output"])
+    if args["output"] is None:
+        with open(output.suggest_file_name() + "." + output.get_file_extension(), "wb") as file:
+            file.write(output.get_content())
+    else:
+        with open(args["output"], "wb") as file:
+            file.write(output.get_content())
     print("文件已保存")
+    return 0
 
 
 def get_semester_id(semester_name: str, id_table: dict[str, str]) -> str | None:
@@ -49,7 +52,9 @@ def get_args():
     parser.add_argument('--password', '-p', type=str, help='统一身份认证密码')
     parser.add_argument('--semester', '-s', type=str, help='需要导出的课程表所在学期（例如：\"2020夏\"）')
     parser.add_argument('--output', '-o', type=str, help='输出文件名')
-    group = parser.add_mutually_exclusive_group()
+    parser.add_argument('--format', '-f', type=str, default="wakeup", help='输出为何种格式的文件，默认为 wakeup 课程表备份文件')
+    parser.add_argument('--print-formats', action='store_true', help='打印所有可用的输出格式')
+    group =parser.add_mutually_exclusive_group()
     group.add_argument('-6', action='store_true', help='强制使用 ipv6')
     group.add_argument('-4', action='store_true', help='强制使用 ipv4')
     return vars(parser.parse_args())
@@ -60,8 +65,6 @@ def ask_for_info(args: dict):
         args["semester"] = get_semester_selection()
     else:
         args["semester"] = parse_semester_selection(args["semester"])
-    if args["output"] is None:
-        args["output"] = args["semester"] + ".wakeup_schedule"
     if args["username"] is None:
         args["username"] = input("统一身份认证用户名（学号）：").strip()
     if args["password"] is None:
@@ -81,8 +84,8 @@ def parse_semester_selection(raw: str) -> str:
         raw = input("请输入学期名（例如：2020夏、2021秋）：").strip()
 
 
-if __name__ == "__main__":
-    main()
+__all__ = ["cli_main"]
+
 
 
 
