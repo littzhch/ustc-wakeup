@@ -52,7 +52,8 @@ available_handlers: dict[str, type[CourseTableHandler]] = {}
 def register_handler(handler: type[CourseTableHandler], name: str):
     available_handlers[name] = handler
 
-from .wakeup import WakeupHandler
+from .wakeup import Wakeup
+from .ical import Icalendar
 
 __all__ = ["CourseTableHandler", "CourseTableOutput", "register_handler", "available_handlers"]
 
