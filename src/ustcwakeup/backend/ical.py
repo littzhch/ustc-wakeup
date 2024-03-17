@@ -20,8 +20,8 @@ timetable_info = {
 }
 
 def get_datetime_by_period(start_period: int, end_period: int, week: int, weekday: int, start_date: date) -> tuple[datetime, datetime]:
-    start_time = timetable_info[start_period]
-    end_time = timetable_info[end_period]
+    start_time = timetable_info[start_period][0]
+    end_time = timetable_info[end_period][1]
     event_date = start_date + timedelta(days=weekday + (week - 1) * 7)
     start_datetime = datetime(event_date.year, event_date.month, event_date.day, start_time[0], start_time[1], tzinfo=timezone(timedelta(hours=8)))
     end_datetime = datetime(event_date.year, event_date.month, event_date.day, end_time[0], end_time[1], tzinfo=timezone(timedelta(hours=8)))
