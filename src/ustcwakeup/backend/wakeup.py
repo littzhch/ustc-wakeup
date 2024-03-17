@@ -8,7 +8,7 @@ time_table = """\
 [{"endTime": "08:35", "node": 1, "startTime": "07:50", "timeTable": 1}, {"endTime": "09:25", "node": 2, "startTime": "08:40", "timeTable": 1}, {"endTime": "10:30", "node": 3, "startTime": "09:45", "timeTable": 1}, {"endTime": "11:20", "node": 4, "startTime": "10:35", "timeTable": 1}, {"endTime": "12:10", "node": 5, "startTime": "11:25", "timeTable": 1}, {"endTime": "14:45", "node": 6, "startTime": "14:00", "timeTable": 1}, {"endTime": "15:35", "node": 7, "startTime": "14:50", "timeTable": 1}, {"endTime": "16:40", "node": 8, "startTime": "15:55", "timeTable": 1}, {"endTime": "17:30", "node": 9, "startTime": "16:45", "timeTable": 1}, {"endTime": "18:20", "node": 10, "startTime": "17:35", "timeTable": 1}, {"endTime": "20:15", "node": 11, "startTime": "19:30", "timeTable": 1}, {"endTime": "21:05", "node": 12, "startTime": "20:20", "timeTable": 1}, {"endTime": "21:55", "node": 13, "startTime": "21:10", "timeTable": 1}, {"endTime": "00:45", "node": 14, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 15, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 16, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 17, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 18, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 19, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 20, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 21, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 22, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 23, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 24, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 25, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 26, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 27, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 28, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 29, "startTime": "00:00", "timeTable": 1}, {"endTime": "00:45", "node": 30, "startTime": "00:00", "timeTable": 1}]
 """
 
-class WakeupHandler(CourseTableHandler, CourseTableOutput):    
+class Wakeup(CourseTableHandler, CourseTableOutput):    
     def __init__(self, semester_name: str):
         self.semeter_name: str = semester_name
         self.courses_info: list[dict] = []
@@ -89,7 +89,7 @@ class WakeupHandler(CourseTableHandler, CourseTableOutput):
         return self
     
     def suggest_file_name(self) -> str:
-        return self.semeter_name
+        return self.semeter_name + "课程表"
     
     def get_file_extension(self) -> str:
         return "wakeup_schedule"
@@ -113,4 +113,4 @@ def get_color() -> str:
     return '#ff' + result
         
 
-register_handler(WakeupHandler, "wakeup")
+register_handler(Wakeup, "wakeup")
