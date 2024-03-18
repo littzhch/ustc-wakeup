@@ -46,16 +46,26 @@ class Wakeup(CourseTableHandler, CourseTableOutput):
         if len(course.activities) == 0:
             return
         course_id = len(self.courses_info) + 1
+        
+        note = f'课堂号: {course.course_id}.{course.class_id}\n'
+        for teacher in course.teachers:
+            note += f'{teacher.name_zn}:\n\t'
+            note += f'性别: {"女" if teacher.gender == 0 else "男"}\n\t'
+            note += f'年龄: {teacher.age}\n\t'
+            note += f'职称: {teacher.title}\n\t'
+            note += f'邮箱: {teacher.email}\n'
+        
         course_info = {
             "color": get_color(),
             "courseName": course.name_zh,
             "credit": course.credits,
             "id": course_id,
-            "note": course.course_id + '.' + course.class_id,
+            "note": note,
             "tableId": 1
         }
         self.courses_info.append(course_info)
         for activity in course.activities:
+            teacher_names: list[str] = [teacher.name_zn for teacher in activity.teachers]
             activity_info = {
                 "id": course_id,
                 "day": activity.time_period.weekday if activity.time_period.weekday != 0 else 7,
@@ -69,7 +79,7 @@ class Wakeup(CourseTableHandler, CourseTableOutput):
                 "startWeek": activity.week_range.first_week,
                 "step": activity.time_period.end - activity.time_period.start + 1,
                 "tableId": 1,
-                "teacher": '\n'.join(activity.teachers),
+                "teacher": '\n'.join(teacher_names),
                 "type": activity.week_range.week_type
         }
             self.activities_info.append(activity_info)

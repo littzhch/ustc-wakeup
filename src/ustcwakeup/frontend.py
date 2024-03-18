@@ -12,6 +12,7 @@ from .course_table import *
 login_url = "https://jw.ustc.edu.cn/ucas-sso/login"
 semester_info_url = "https://jw.ustc.edu.cn/for-std/course-table/"
 data_url = "https://jw.ustc.edu.cn/for-std/course-table/get-data"
+teacher_info_url = "https://jw.ustc.edu.cn/ws/for-std/course-select/teacher-info-by-lesson"
 header = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                   "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -24,7 +25,7 @@ def parse_semester_list(html: str):
     return {value: key for key, value in semesters.items()}
     
 
-def get_web_data(username: str, password: str, semester_name: str, force_ipv6: bool = False, force_ipv4: bool = False) -> str:
+def get_web_data(username: str, password: str, semester_name: str, force_ipv6: bool = False, force_ipv4: bool = False) -> dict:
     assert not (force_ipv4 and force_ipv6)
     old_setting = urllib3_cn.allowed_gai_family
     if force_ipv6:
@@ -40,7 +41,10 @@ def get_web_data(username: str, password: str, semester_name: str, force_ipv6: b
     rq.get(login_url, params={"ticket": result[1]}, headers=header, cookies=cookie_jar)
     data_id = rq.get(semester_info_url, headers=header, cookies=cookie_jar,
                               allow_redirects=False).headers["location"][-6:]
-    semester_dict = parse_semester_list(rq.get(semester_info_url, headers=header, cookies=cookie_jar).text)
+    semester_info_html = rq.get(semester_info_url, headers=header, cookies=cookie_jar).text
+    semester_dict = parse_semester_list(semester_info_html)
+    student_id_re = r"[\s\S]*?var studentId = (\d+);"
+    student_id = re.match(student_id_re, semester_info_html).group(1)
     if semester_name not in semester_dict:
         raise RuntimeError("未找到该学期课表")
     params = {
@@ -48,9 +52,19 @@ def get_web_data(username: str, password: str, semester_name: str, force_ipv6: b
         "semesterId": semester_dict[semester_name],
         "dataId": data_id,
     }
-    semester_json = rq.get(data_url, params=params, headers=header, cookies=cookie_jar).text
+    semester_data = json.loads(rq.get(data_url, params=params, headers=header, cookies=cookie_jar).text)
+    for lesson_data in semester_data["lessons"]:
+        lesson_id = lesson_data["id"]
+        for teacher_data in lesson_data["teacherAssignmentList"]:
+            person_id = teacher_data["person"]["id"]
+            email = json.loads(rq.get(teacher_info_url, headers=header, cookies=cookie_jar, params={
+                "lessonId": lesson_id,
+                "personId": person_id,
+                "studentId": student_id,
+            }).text)["teachers"][0]["email"]
+            teacher_data["email"] = email
     urllib3_cn.allowed_gai_family = old_setting
-    return semester_json
+    return semester_data
 
 def parse_week(text: str):
     if "~" in text:
@@ -71,10 +85,15 @@ def parse_time(text: str):
     return day, tup[0], tup[-1]
 
 
-def get_line_activities(text: str) -> list[Activity]:
+def get_line_activities(text: str, teachers: list[Teacher]) -> list[Activity]:
     result = []
     re_str = r"周 ([\s\S]*?) :([\S\s]*?) ([\S\s]*)"
-    location, tm, teacher = re.search(re_str, text).groups()
+    location, tm, teacher_name = re.search(re_str, text).groups()
+    
+    for teacher in teachers:
+        if teacher_name == teacher.name_zn or teacher_name == teacher.name_en:
+            break
+        
     day, start_period, end_period = parse_time(tm)
     text = text.split("周 ")[0].split(",")
     for t in text:
@@ -102,7 +121,6 @@ def parse_data(data: str, handler: CourseTableHandler):
     re_exp = r"(\d+)~(\d+)(?:\(([单|双])\))?周 ([\s\S]*) :(\d)\((\d+)[\s\S]*?(\d+)\)"
     re_exp = re.compile(re_exp)
     
-    data = json.loads(data)
     start_date = data["oddWeekIndex2dayOfWeek2Date"]["1"]["7"]
     start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
     handler.set_semester_start_date(start_date)
@@ -117,10 +135,20 @@ def parse_data(data: str, handler: CourseTableHandler):
         course.course_id = course_data["course"]["code"]
         course.class_id = course_data["code"].split(".")[-1]
         
+        for teacher_data in course_data["teacherAssignmentList"]:
+            teacher = Teacher()
+            teacher.name_zn = teacher_data["person"]["nameZh"]
+            teacher.name_en = teacher_data["person"]["nameEn"]
+            teacher.age = teacher_data["age"]
+            teacher.email = teacher_data["email"]
+            teacher.title = teacher_data["teacher"]["title"]["nameZh"]
+            teacher.gender = teacher_data["teacher"]["person"]["gender"]["id"] % 2
+            course.teachers.append(teacher)
+        
         activity_text = course_data["scheduleText"]["dateTimePlacePersonText"]["textZh"]
         if activity_text:
             for single_line in activity_text.split("\n"):
-                activities = get_line_activities(single_line)
+                activities = get_line_activities(single_line, course.teachers)
                 for activity in activities:
                     course.add_activity(activity)
                 

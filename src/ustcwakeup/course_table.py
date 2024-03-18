@@ -38,10 +38,26 @@ class TimePeriod:
             and self.weekday == other.weekday \
             and self.start == other.start \
             and self.end == other.end
+            
+class Teacher:
+    """
+    self.name_zn: str，中文名
+    self.name_en: str，英文名
+    self.gender: int，0表示女，1表示男
+    self.title: str，职称
+    self.email: str，邮箱地址
+    """
+    def __init__(self):
+        self.name_zn: str = None
+        self.name_en: str = None
+        self.gender: int = None
+        self.age: int = None
+        self.title: str = None
+        self.email: str = None
     
     
 class Activity:
-    def __init__(self, week_range: WeekSelection, time_period: TimePeriod, location: str, teachers: list[str]):
+    def __init__(self, week_range: WeekSelection, time_period: TimePeriod, location: str, teachers: list[Teacher]):
         self.week_range = week_range
         self.time_period = time_period
         self.location = location
@@ -55,6 +71,7 @@ class Course:
         self.credits: float = None
         self.course_id: str = None
         self.class_id: str = None
+        self.teachers: list[Teacher] = []
         self.activities: list[Activity] = []
         
     def add_activity(self, activity: Activity):

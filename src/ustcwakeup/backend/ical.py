@@ -52,8 +52,10 @@ class Icalendar(CourseTableHandler, CourseTableOutput):
                                                       activity.time_period.weekday,
                                                       self.start_date)
             event = Event()
+            for teacher in activity.teachers:
+                event.add('attendee', parameters={'cn': teacher.name_zn}, value=f'mailto:{teacher.email}')
             event.add('summary', course.name_zh)
-            event.add('description', f"{course.course_id}.{course.class_id} {'、'.join(activity.teachers)}")
+            event.add('description', f"{course.course_id}.{course.class_id}")
             event.add('location', activity.location)
             event.add('dtstart', start_dt)
             event.add('dtend', end_dt)
