@@ -49,7 +49,7 @@ class Wakeup(CourseTableHandler, CourseTableOutput):
         
         note = f'课堂号: {course.course_id}.{course.class_id}\n'
         for teacher in course.teachers:
-            note += f'{teacher.name_zn}:\n\t'
+            note += f'{teacher.name_zh}:\n\t'
             note += f'性别: {"女" if teacher.gender == 0 else "男"}\n\t'
             note += f'年龄: {teacher.age}\n\t'
             note += f'职称: {teacher.title}\n\t'
@@ -65,7 +65,9 @@ class Wakeup(CourseTableHandler, CourseTableOutput):
         }
         self.courses_info.append(course_info)
         for activity in course.activities:
-            teacher_names: list[str] = [teacher.name_zn for teacher in activity.teachers]
+            print(activity.teachers[0].name_zh, activity.teachers[1].name_zh)
+            assert activity.teachers[0] is not activity.teachers[1]
+            teacher_names: list[str] = [teacher.name_zh for teacher in activity.teachers]
             activity_info = {
                 "id": course_id,
                 "day": activity.time_period.weekday if activity.time_period.weekday != 0 else 7,

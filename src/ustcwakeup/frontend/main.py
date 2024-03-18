@@ -96,7 +96,7 @@ def get_line_activities(text: str, teachers: list[Teacher]) -> list[Activity]:
     location, tm, teacher_name = re.search(re_str, text).groups()
     
     for teacher in teachers:
-        if teacher_name == teacher.name_zn or teacher_name == teacher.name_en:
+        if teacher_name == teacher.name_zh or teacher_name == teacher.name_en:
             break
         
     day, start_period, end_period = parse_time(tm)
@@ -141,8 +141,9 @@ def parse_data(data: str, handler: CourseTableHandler):
         course.class_id = course_data["code"].split(".")[-1]
         
         for teacher_data in course_data["teacherAssignmentList"]:
+            print(teacher_data["person"]["nameZh"], teacher_data["person"]["nameEn"])
             teacher = Teacher()
-            teacher.name_zn = teacher_data["person"]["nameZh"]
+            teacher.name_zh = teacher_data["person"]["nameZh"]
             teacher.name_en = teacher_data["person"]["nameEn"]
             teacher.age = teacher_data["age"]
             teacher.email = teacher_data["email"]
