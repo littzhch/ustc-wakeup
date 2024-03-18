@@ -1,12 +1,12 @@
-import requests as rq
+import aiohttp
+import asyncio
 import re
 import socket
 import json
-import requests.packages.urllib3.util.connection as urllib3_cn
 from datetime import date, datetime
 from .ustc_cas import cas_login
-from .backend import CourseTableHandler, CourseTableOutput
-from .course_table import *
+from ..backend import CourseTableHandler, CourseTableOutput
+from ..course_table import *
 
 
 login_url = "https://jw.ustc.edu.cn/ucas-sso/login"
@@ -23,49 +23,52 @@ def parse_semester_list(html: str):
     re_str_list = r"<option[\S\s]*?value=\"([0-9]+?)\">([\S\s]+?季学期)</option>"
     semesters = dict(re.findall(re_str_list, html))
     return {value: key for key, value in semesters.items()}
-    
 
-def get_web_data(username: str, password: str, semester_name: str, force_ipv6: bool = False, force_ipv4: bool = False) -> dict:
+async def get_web_data(username: str, password: str, semester_name: str, force_ipv6: bool = False, force_ipv4: bool = False) -> dict:
+    # 设置 session
     assert not (force_ipv4 and force_ipv6)
-    old_setting = urllib3_cn.allowed_gai_family
-    if force_ipv6:
-        urllib3_cn.allowed_gai_family = lambda: socket.AF_INET6
-    elif force_ipv4:
-        urllib3_cn.allowed_gai_family = lambda: socket.AF_INET
-        
-    rsps = rq.get(login_url, headers=header, allow_redirects=False)
-    cookie_jar = rsps.cookies
-    result = cas_login(username, password, login_url)
-    if result is None:
-        raise ValueError("统一身份认证登录失败，请检查学号和密码")
+    if force_ipv4:
+        connector=aiohttp.TCPConnector(family=socket.AF_INET)
+    elif force_ipv6:
+        connector=aiohttp.TCPConnector(family=socket.AF_INET6)
     else:
+        connector=aiohttp.TCPConnector()
+    async with aiohttp.ClientSession(connector=connector, headers=header) as session:
+        result = await cas_login(username, password, session, service=login_url, autojump=False)
+        if result is None:
+            raise ValueError("统一身份认证登录失败，请检查学号和密码")
         print("统一身份认证登录成功")
-    rq.get(login_url, params={"ticket": result[1]}, headers=header, cookies=cookie_jar)
-    data_id = rq.get(semester_info_url, headers=header, cookies=cookie_jar,
-                              allow_redirects=False).headers["location"][-6:]
-    semester_info_html = rq.get(semester_info_url, headers=header, cookies=cookie_jar).text
-    semester_dict = parse_semester_list(semester_info_html)
-    student_id_re = r"[\s\S]*?var studentId = (\d+);"
-    student_id = re.match(student_id_re, semester_info_html).group(1)
-    if semester_name not in semester_dict:
-        raise RuntimeError("未找到该学期课表")
-    params = {
-        "bizTypeId": "2",
-        "semesterId": semester_dict[semester_name],
-        "dataId": data_id,
-    }
-    semester_data = json.loads(rq.get(data_url, params=params, headers=header, cookies=cookie_jar).text)
-    for lesson_data in semester_data["lessons"]:
-        lesson_id = lesson_data["id"]
-        for teacher_data in lesson_data["teacherAssignmentList"]:
-            person_id = teacher_data["person"]["id"]
-            email = json.loads(rq.get(teacher_info_url, headers=header, cookies=cookie_jar, params={
-                "lessonId": lesson_id,
-                "personId": person_id,
-                "studentId": student_id,
-            }).text)["teachers"][0]["email"]
-            teacher_data["email"] = email
-    urllib3_cn.allowed_gai_family = old_setting
+        await session.get(login_url, params={"ticket": result[1]})
+        data_id = (await session.get(semester_info_url, allow_redirects=False)).headers["location"][-6:]
+        semester_info_html = await (await session.get(semester_info_url)).text()
+        semester_dict = parse_semester_list(semester_info_html)
+        student_id_re = r"[\s\S]*?var studentId = (\d+);"
+        student_id = re.match(student_id_re, semester_info_html).group(1)
+        if semester_name not in semester_dict:
+            raise RuntimeError("未找到该学期课表")
+        params = {
+            "bizTypeId": "2",
+            "semesterId": semester_dict[semester_name],
+            "dataId": data_id,
+        }
+        semester_data = json.loads(await (await session.get(data_url, params=params)).text())
+        
+        # 填充教师邮箱
+        tasks = []
+        async def fill_teacher_email(teacher_data: dict, params: dict, session):
+            teacher_data["email"] = json.loads(await (await session.get(teacher_info_url, params=params)).text())["teachers"][0]["email"]
+        for lesson_data in semester_data["lessons"]:
+            lesson_id = lesson_data["id"]
+            for teacher_data in lesson_data["teacherAssignmentList"]:
+                person_id = teacher_data["person"]["id"]
+                params={
+                    "lessonId": lesson_id,
+                    "personId": person_id,
+                    "studentId": student_id,
+                }
+                tasks.append(asyncio.create_task(fill_teacher_email(teacher_data, params, session)))
+        for task in tasks:
+            await task
     return semester_data
 
 def parse_week(text: str):
@@ -168,7 +171,7 @@ def get_course_table(
     force_ipv6: bool = False, 
     force_ipv4: bool = False,
 ) -> CourseTableOutput:
-    data = get_web_data(username, password, semester_name, force_ipv6, force_ipv4)
+    data = asyncio.run(get_web_data(username, password, semester_name, force_ipv6, force_ipv4))
     handler = Handler(semester_name)
     parse_data(data, handler)
     return handler.finish()

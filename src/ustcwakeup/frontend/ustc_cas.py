@@ -1,7 +1,7 @@
 from PIL import Image
 import io
 import pickle
-import requests as rq
+import aiohttp
 import re
 
 
@@ -264,7 +264,7 @@ def _get_cas_lt(text: str) -> str:
     return match.group(1)
 
 
-def cas_login(username: str, password: str, service="", autojump=False):
+async def cas_login(username: str, password: str, client: aiohttp.ClientSession, service="", autojump=False):
     """
     登录统一身份认证系统
     :param username: str 用户名
@@ -273,29 +273,27 @@ def cas_login(username: str, password: str, service="", autojump=False):
     :param autojump: bool 登录成功后是否自动跳转
     :return: dict or None
     若登录成功，且autojump=False,返回tuple：location, ticket, cookies
-    若登录成功，且autojump=True,返回requests.Response
+    若登录成功，且autojump=True,返回 Response
     若登录失败，返回None
     """
     url = "https://passport.ustc.edu.cn/login"
     image_url = "https://passport.ustc.edu.cn/validatecode.jsp?type=login"
-    jar = rq.cookies.RequestsCookieJar()
-    rsps = rq.get(url, params={"service": service})
-    jar.update(rsps.cookies)
-    form = _get_form_list(rsps.text)
-    cas_lt = _get_cas_lt(rsps.text)
-
+    
+    rsps = await client.get(url, params={"service": service})
+    form = _get_form_list(await rsps.text())
+    cas_lt = _get_cas_lt(await rsps.text())
+    
     form["username"] = username
     form["password"] = password
     form["CAS_LT"] = cas_lt
     if form["showCode"]:
-        rsps = rq.get(image_url, cookies=jar)
-        form["LT"] = _get_validatecode(rsps.content)
+        rsps = await client.get(image_url)
+        form["LT"] = _get_validatecode(await rsps.read())
     form["button"] = ''
-
-    rsps = rq.post(url, cookies=jar, data=form, allow_redirects=autojump)
-
+    
+    rsps = await client.post(url, data=form, allow_redirects=autojump)
     if not autojump:
-        if rsps.status_code != 302:
+        if rsps.status != 302:
             return None
         re_obj = re.search(r"ticket=(\S*)", rsps.headers["location"])
         if re_obj:
@@ -304,7 +302,7 @@ def cas_login(username: str, password: str, service="", autojump=False):
             ticket = None
         return rsps.headers["location"], ticket, rsps.cookies
     else:
-        if re.search(r"中国科学技术大学统一身份认证系统[\S\s]*?请输入验证码！", rsps.text):
+        if re.search(r"中国科学技术大学统一身份认证系统[\S\s]*?请输入验证码！", await rsps.text()):
             return None
         return rsps
 

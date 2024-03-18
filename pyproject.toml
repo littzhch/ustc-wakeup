@@ -7,7 +7,7 @@ name = "ustcwakeup"
 version = "2024.0.0"
 dependencies = [
     "pillow>=10.2.0",
-    "requests>=2.31.0",
+    "aiohttp>=3.9.3",
     "icalendar>=5.0.11",
 ]
 requires-python = ">=3.8"
