@@ -38,6 +38,8 @@ def get_web_data(username: str, password: str, semester_name: str, force_ipv6: b
     result = cas_login(username, password, login_url)
     if result is None:
         raise ValueError("统一身份认证登录失败，请检查学号和密码")
+    else:
+        print("统一身份认证登录成功")
     rq.get(login_url, params={"ticket": result[1]}, headers=header, cookies=cookie_jar)
     data_id = rq.get(semester_info_url, headers=header, cookies=cookie_jar,
                               allow_redirects=False).headers["location"][-6:]
@@ -141,7 +143,10 @@ def parse_data(data: str, handler: CourseTableHandler):
             teacher.name_en = teacher_data["person"]["nameEn"]
             teacher.age = teacher_data["age"]
             teacher.email = teacher_data["email"]
-            teacher.title = teacher_data["teacher"]["title"]["nameZh"]
+            if teacher_data["teacher"]["title"]:
+                teacher.title = teacher_data["teacher"]["title"]["nameZh"]
+            else:
+                teacher.title = ""
             teacher.gender = teacher_data["teacher"]["person"]["gender"]["id"] % 2
             course.teachers.append(teacher)
         

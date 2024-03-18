@@ -44,7 +44,7 @@ class Teacher:
     self.name_zn: str，中文名
     self.name_en: str，英文名
     self.gender: int，0表示女，1表示男
-    self.title: str，职称
+    self.title: str，职称，可能为空字符串
     self.email: str，邮箱地址
     """
     def __init__(self):
