@@ -34,7 +34,7 @@ def get_line_activities(text: str, teachers: list[Teacher]) -> list[Activity]:
     location, tm, teacher_name = re.search(re_str, text).groups()
     
     possible_names = [teacher.name_zh for teacher in teachers] + [teacher.name_en for teacher in teachers]
-    teacher_name = difflib.get_close_matches(teacher_name, possible_names, n=1, cutoff=0.0)
+    teacher_name = difflib.get_close_matches(teacher_name, possible_names, n=1, cutoff=0.0)[0]
     for teacher in teachers:
         if teacher_name == teacher.name_zh or teacher_name == teacher.name_en:
             break
