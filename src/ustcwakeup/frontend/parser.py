@@ -81,7 +81,6 @@ def parse_and_feed_data(data: str, handler: CourseTableHandler):
         course.class_id = course_data["code"].split(".")[-1]
         
         for teacher_data in course_data["teacherAssignmentList"]:
-            print(teacher_data["person"]["nameZh"], teacher_data["person"]["nameEn"])
             teacher = Teacher()
             teacher.name_zh = teacher_data["person"]["nameZh"]
             teacher.name_en = teacher_data["person"]["nameEn"]
