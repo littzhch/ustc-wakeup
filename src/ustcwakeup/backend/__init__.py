@@ -53,14 +53,20 @@ class CourseTableHandler(ABC):
 available_handlers: dict[str, type[CourseTableHandler]] = {}
 
 
-def register_handler(handler: type[CourseTableHandler], name: str):
-    available_handlers[name] = handler
+def cli_avaiable(name: str, desciption: str):
+
+    def decorator(cls):
+        cls.description = desciption
+        available_handlers[name] = cls
+        return cls
+
+    return decorator
 
 
 from .wakeup import Wakeup
 from .ical import Icalendar
 
 __all__ = [
-    "CourseTableHandler", "CourseTableOutput", "register_handler",
+    "CourseTableHandler", "CourseTableOutput", "cli_avaiable",
     "available_handlers"
 ]

@@ -9,8 +9,8 @@ from .frontend import get_course_table
 def cli_main() -> int:
     args = get_args()
     if args["print_formats"]:
-        for key in available_handlers.keys():
-            print(key)
+        for key, value in available_handlers.items():
+            print(f'{key:20}{value.description}')
         return 0
 
     ask_for_info(args)

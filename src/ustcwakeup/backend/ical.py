@@ -1,6 +1,6 @@
 from icalendar import Calendar, Event, vRecur
 from datetime import date, datetime, timedelta, timezone
-from . import CourseTableHandler, CourseTableOutput, register_handler
+from . import CourseTableHandler, CourseTableOutput, cli_avaiable
 from ..course_table import *
 
 timetable_info = {
@@ -41,6 +41,7 @@ def get_datetime_by_period(start_period: int, end_period: int, week: int,
     return start_datetime, end_datetime
 
 
+@cli_avaiable("ical", "icalendar 文件(*.ics)，可导入到大部分日历软件")
 class Icalendar(CourseTableHandler, CourseTableOutput):
 
     def __init__(self, semester_name: str):
@@ -92,6 +93,3 @@ class Icalendar(CourseTableHandler, CourseTableOutput):
 
     def get_content(self) -> bytes:
         return self.ical.to_ical()
-
-
-register_handler(Icalendar, "ical")

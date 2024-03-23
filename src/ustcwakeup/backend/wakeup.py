@@ -1,4 +1,4 @@
-from . import CourseTableHandler, CourseTableOutput, register_handler
+from . import CourseTableHandler, CourseTableOutput, cli_avaiable
 from ..course_table import *
 from datetime import date
 import json
@@ -9,6 +9,7 @@ time_table = """\
 """
 
 
+@cli_avaiable("wakeup", "wakeup 课程表备份文件")
 class Wakeup(CourseTableHandler, CourseTableOutput):
 
     def __init__(self, semester_name: str):
@@ -141,6 +142,3 @@ def get_color() -> str:
     result = colors[current]
     current = (current + 1) % len(colors)
     return '#ff' + result
-
-
-register_handler(Wakeup, "wakeup")
