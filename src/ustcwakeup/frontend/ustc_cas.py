@@ -175,25 +175,14 @@ number_0 = b'\x80\x05\x95\xb1\x01\x00\x00\x00\x00\x00\x00\x8c\tPIL.Image\x94\x8c
            b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff' \
            b'\x94eb.'
 
-std_imgs = (
-    pickle.loads(number_0),
-    pickle.loads(number_1),
-    pickle.loads(number_2),
-    pickle.loads(number_3),
-    pickle.loads(number_4),
-    pickle.loads(number_5),
-    pickle.loads(number_6),
-    pickle.loads(number_7),
-    pickle.loads(number_8),
-    pickle.loads(number_9)
-)
+std_imgs = (pickle.loads(number_0), pickle.loads(number_1),
+            pickle.loads(number_2), pickle.loads(number_3),
+            pickle.loads(number_4), pickle.loads(number_5),
+            pickle.loads(number_6), pickle.loads(number_7),
+            pickle.loads(number_8), pickle.loads(number_9))
 
-number_boxes = (
-    (28, 4, 43, 25),
-    (49, 4, 64, 25),
-    (70, 4, 85, 25),
-    (91, 4, 106, 25)
-)
+number_boxes = ((28, 4, 43, 25), (49, 4, 64, 25), (70, 4, 85, 25), (91, 4, 106,
+                                                                    25))
 
 WIDTH, HEIGHT = 120, 32
 WID, HEI = 15, 21
@@ -264,7 +253,11 @@ def _get_cas_lt(text: str) -> str:
     return match.group(1)
 
 
-async def cas_login(username: str, password: str, client: aiohttp.ClientSession, service="", autojump=False):
+async def cas_login(username: str,
+                    password: str,
+                    client: aiohttp.ClientSession,
+                    service="",
+                    autojump=False):
     """
     登录统一身份认证系统
     :param username: str 用户名
@@ -278,11 +271,11 @@ async def cas_login(username: str, password: str, client: aiohttp.ClientSession,
     """
     url = "https://passport.ustc.edu.cn/login"
     image_url = "https://passport.ustc.edu.cn/validatecode.jsp?type=login"
-    
+
     rsps = await client.get(url, params={"service": service})
     form = _get_form_list(await rsps.text())
     cas_lt = _get_cas_lt(await rsps.text())
-    
+
     form["username"] = username
     form["password"] = password
     form["CAS_LT"] = cas_lt
@@ -290,7 +283,7 @@ async def cas_login(username: str, password: str, client: aiohttp.ClientSession,
         rsps = await client.get(image_url)
         form["LT"] = _get_validatecode(await rsps.read())
     form["button"] = ''
-    
+
     rsps = await client.post(url, data=form, allow_redirects=autojump)
     if not autojump:
         if rsps.status != 302:
@@ -308,7 +301,6 @@ async def cas_login(username: str, password: str, client: aiohttp.ClientSession,
 
 
 __all__ = ["cas_login"]
-
 
 if __name__ == "__main__":
     help(cas_login)
